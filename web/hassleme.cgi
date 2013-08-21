@@ -305,7 +305,7 @@ while (my $q = new mySociety::CGIFast()) {
                     my $confirmurl = mySociety::Config::get('WEBURL') . "/C/" . token($recipient_id);
 
                     my $t1 = time();
-                    sendmail($email, "Please confirm you want to be hassled to \"$what_preview\"",
+                    my $result = sendmail($email, "Please confirm you want to be hassled to \"$what_preview\"",
                              <<EOF,
 
 Hello,
@@ -332,6 +332,13 @@ EOF
                     my $dt = time() - $t1;
                     warn "sending email to <$email> about hassle #$hassle_id took ${dt}s"
                         if ($dt > 30);
+                    if ($result == mySociety::EmailUtil::EMAIL_SUCCESS) {
+                        ;
+                    } elsif ($result == mySociety::EmailUtil::EMAIL_SOFT_ERROR) {
+                        push @errors, "Your email to $email didn't work, but it looks like it might be worth trying again later ('soft error').";
+                    } else {
+                        push @errors, "The email computers say that they cannot pass on a message to $email - are you sure this is the right address? ('hard error')";
+                    }
                 }
 
                 my $dt = time() - $t0;
